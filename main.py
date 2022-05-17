@@ -1,4 +1,6 @@
-from datetime import timedelta
+import argparse
+from datetime import datetime, timedelta
+from pathlib import Path
 import pandas as pd
 
 
@@ -12,8 +14,11 @@ date_format = '%Y-%m-%d'
 # 日付の差の閾値
 days_threshold = 30
 
+# アウトプットディレクトリ
+dir_output = Path('output')
 
-def main(filename: str = 'df_sample.csv'):
+
+def main(filename: str) -> None:
     df = pd.read_csv(filename)
 
     # 日付を文字列からdatetime64[ns]に変換
@@ -42,14 +47,26 @@ def main(filename: str = 'df_sample.csv'):
     # 閾値以上のデータを取得
     dm = df2[df2['date_diff'] >= timedelta(days=days_threshold)]
 
-    print(dm)
+    # print(dm)
+
+    # アウトプットディレクトリがなければ作成
+    dir_output.mkdir(exist_ok=True)
+
+    # 現在時刻
+    now = datetime.now().strftime('%Y%m%d_%H%M%S')
 
     # dmを保存
-    dm.to_csv('dm.csv', index=False)
+    dm.to_csv(dir_output / f'dm_{now}.csv', index=False)
 
     # ユーザ名だけ保存
-    dm[[user_col_name]].to_csv('user.csv', index=False)
+    dm[[user_col_name]].to_csv(dir_output / f'user_{now}.csv', index=False)
 
 
 if __name__ == '__main__':
-    main()
+    # ファイル名を引数で受け取る
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-f', '--filename', default='df_sample.csv', help='filename')
+    args = parser.parse_args()
+
+    main(args.filename)
